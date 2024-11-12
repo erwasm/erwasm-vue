@@ -1,0 +1,4 @@
+node_modules
+vendor/*.wat
+vendor/*.S
+esrc/*fat.wasm
