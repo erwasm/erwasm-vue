@@ -7,6 +7,7 @@ erwasm is a compiler of Erlang language into WASM.
 
 Here is a vue application with service worker compiled from erlang to wasm.
 
+There is no backend, but you need to have erlang and python installed to compile.
 
 # Links
 
