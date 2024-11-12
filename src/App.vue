@@ -10,6 +10,17 @@
   <p v-else-if="quote.loading">
     ...
   </p>
+
+  <button @click="handleClick">This does nothing </button>
+
+  <div v-if="nothing.response">
+    <p>This seriously does nothing</p>
+
+    <pre v-if="nothing.response">
+      {{ JSON.stringify(nothing.response) }}
+    </pre>
+  </div>
+
 </template>
 <script setup>
 import { reactive, onMounted } from 'vue';
@@ -23,6 +34,10 @@ const quote = reactive({
   loading: true,
 });
 
+const nothing = reactive({
+  response: null,
+});
+
 onMounted(async () => {
   try {
     quote.loading = true;
@@ -33,5 +48,13 @@ onMounted(async () => {
     quote.loading = false;
   }
 });
+
+const handleClick = async () => {
+  if (nothing.response) {
+    nothing.response = null;
+  } else {
+    nothing.response = await worker.request('nothing');
+  }
+}
 
 </script>

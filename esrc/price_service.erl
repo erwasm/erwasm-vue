@@ -5,14 +5,13 @@
 ]).
 
 
-handle(Request) ->
-  case Request of
-    <<"quote">> -> 
-      { [ 
-         { <<"base">>, 5 },
-         { <<"full">>, 15 }
-      ] }
-  end.
+handle(<<"quote">>) ->
+  { [
+     { <<"base">>, 5 },
+     { <<"full">>, 15 }
+  ] };
+
+handle(_R) -> [404, <<"COULD KNOWN NOT">>].
 
 request(InBytes) ->
   { ok, Data, _Rest } = jsone_decode:decode(InBytes),
