@@ -1,5 +1,3 @@
-importScripts('./proxy.js');
-
 let dispatchFn;
 let setReady;
 let ready = new Promise((resolve) => {
@@ -7,10 +5,12 @@ let ready = new Promise((resolve) => {
 });
 
 async function init() {
-  const request = await erwImport('price_service', 'request', 1);
+  const { fromResponse, decoderUtf8 } = await import('./proxy.js');
+  const modName = 'price_service';
+  const priceService = await fromResponse(modName, fetch(`../esrc/${modName}.fat.wasm`));
   dispatchFn = (data) => {
     const [seq, payload] = data;
-    const resBytes = request(JSON.stringify(payload));
+    const resBytes = priceService.request(JSON.stringify(payload));
     return [seq, JSON.parse(decoderUtf8.decode(resBytes))];
   }
   setReady();

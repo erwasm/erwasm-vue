@@ -1,5 +1,5 @@
 const encoder = new TextEncoder();
-const decoderUtf8 = new TextDecoder();
+export const decoderUtf8 = new TextDecoder();
 
 // lazy platform shim
 const provides = (getMod) => ({
@@ -87,6 +87,16 @@ function readMemPtr(mod, ptr) {
   throw new Error('Unknown tag ' + tag.toString(16));
 }
 
+function readAtom(mod, id) {
+  const func = mod.instance.exports['erlang#atom_to_binary_1'];
+  const ptr = func(id);
+  if ((ptr & 3) !== 2) {
+    throw new Error('Invariant failure. Should either return mem or panic');
+  }
+  const buffer = readMemPtr(mod, ptr >>> 2);
+  return Symbol.for(buffer.toString('utf8'));
+}
+
 const encodeAdapter = {
   encode(mod, x) {
     if ((typeof x)  === 'number') {
@@ -104,6 +114,9 @@ const encodeAdapter = {
     if ((x & 0xF) === 0xF) {
       return (x >>> 4);
     }
+    if ((x & 0x3F) === 0xB) {
+      return readAtom(mod, x);
+    }
     if ((x & 3) === 2) {
       return readMemPtr(mod, x >>> 2);
     }
@@ -111,18 +124,36 @@ const encodeAdapter = {
   },
 };
 
-async function erwImport(modName, funcName, arity, raw) {
-  const wasmBuffer = fetch(`../esrc/${modName}.fat.wasm`);
-  const mod = await WebAssembly.instantiateStreaming(wasmBuffer, provides(
+function makeProxy(mod, modName, raw=false) {
+  const adapter = raw ? rawAdapter : encodeAdapter;
+  return new Proxy(mod, {
+    get(obj, prop) {
+      if (prop === 'then') {
+        return undefined;
+      }
+      return function(...args) {
+        const arity = args.length;
+        const func = obj.instance.exports[`${modName}#${prop}_${arity}`];
+        if (!func) {
+          throw new TypeError(`Function not found. Was looking for ${modName}:${prop}/${arity}.`);
+        }
+        const erArgs = [...args].map((arg) => adapter.encode(mod, arg));
+        return adapter.decode(mod, func(...erArgs));
+      }
+    }
+  });
+}
+
+export async function fromBuffer(modName, wasmBuffer, raw) {
+  const mod = await WebAssembly.instantiate(wasmBuffer, provides(
     () => mod
   ));
-  const func = mod.instance.exports[`${modName}#${funcName}_${arity}`];
-  const adapter = raw ? rawAdapter : encodeAdapter;
-  return (...args) => {
-    if (args.length !== arity) {
-      throw new TypeError(`Arity mismatch on ${modName}:${funcName}/${arity}, got ${args.length} args`);
-    }
-    const erArgs = [...args].map((arg) => adapter.encode(mod, arg));
-    return adapter.decode(mod, func(...erArgs));
-  }
+  return makeProxy(mod, modName, raw);
+}
+
+export async function fromResponse(modName, response, raw) {
+  const mod = await WebAssembly.instantiateStreaming(response, provides(
+    () => mod
+  ));
+  return makeProxy(mod, modName, raw);
 }
