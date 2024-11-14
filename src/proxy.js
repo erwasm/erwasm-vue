@@ -94,7 +94,7 @@ function readAtom(mod, id) {
     throw new Error('Invariant failure. Should either return mem or panic');
   }
   const buffer = readMemPtr(mod, ptr >>> 2);
-  return Symbol.for(buffer.toString('utf8'));
+  return Symbol.for(decoderUtf8.decode(buffer));
 }
 
 const encodeAdapter = {
@@ -156,4 +156,8 @@ export async function fromResponse(modName, response, raw) {
     () => mod
   ));
   return makeProxy(mod, modName, raw);
+}
+
+export function string(buffer) {
+  return decoderUtf8.decode(buffer);
 }
