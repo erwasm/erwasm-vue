@@ -7,9 +7,10 @@
 
 handle(<<"quote">>) ->
   { [
-     { <<"base">>, 5 },
-     { <<"full">>, 15 }
+     { base, 5 },
+     { full, 15 }
   ] };
+
 
 handle(_R) -> [404, <<"COULD KNOWN NOT">>].
 
