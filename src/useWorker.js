@@ -1,5 +1,5 @@
 
-export default function useWorker() {
+export default function useWorker(modName) {
   const worker = new Worker(new URL("./worker.js", import.meta.url));
   const state = {
     seq: 0,
@@ -14,13 +14,17 @@ export default function useWorker() {
     cb(payload);
     delete state.pending[seq];
   };
-  const request = (payload) => {
+  const push = (typ, payload) => {
     const seq = state.seq ++ ;
     const promise = new Promise((resolve => {
       state.pending[seq] = resolve;
     }));
-    worker.postMessage([seq, payload]);
+    worker.postMessage([seq, typ, payload])
     return promise;
-  };
+
+  }
+  const request = (payload) => push('json', payload)
+  push('init', modName);
+
   return { request };
 }

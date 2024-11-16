@@ -4,22 +4,25 @@ let ready = new Promise((resolve) => {
   setReady = resolve
 });
 
-async function init() {
+async function init(modName) {
   const { fromResponse, decoderUtf8 } = await import('./proxy.js');
-  const modName = 'price_service';
   const priceService = await fromResponse(modName, fetch(`../esrc/${modName}.fat.wasm`));
-  dispatchFn = (data) => {
-    const [seq, payload] = data;
+  dispatchFn = (payload) => {
     const resBytes = priceService.request(JSON.stringify(payload));
-    return [seq, JSON.parse(decoderUtf8.decode(resBytes))];
+    return JSON.parse(decoderUtf8.decode(resBytes));
   }
   setReady();
 }
 
 onmessage = async (event) => {
-  await ready;
-  const response = dispatchFn(event.data);
-  postMessage(response);
+  const [seq, typ, payload] = event.data;
+  let response;
+  if (typ === 'init') {
+    response = await init(payload);
+  }
+  if (typ === 'json') {
+    await ready;
+    response = dispatchFn(payload);
+  }
+  postMessage([seq, response]);
 };
-
-init().catch(console.error);
