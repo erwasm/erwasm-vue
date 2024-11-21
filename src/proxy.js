@@ -16,8 +16,6 @@ const provides = (getMod) => ({
   }
 });
 
-
-
 const rawAdapter = {
   encode(mod, x) {
     return x;
@@ -94,7 +92,30 @@ function readAtom(mod, id) {
     throw new Error('Invariant failure. Should either return mem or panic');
   }
   const buffer = readMemPtr(mod, ptr >>> 2);
-  return Symbol.for(decoderUtf8.decode(buffer));
+  const atom = decoderUtf8.decode(buffer);
+  const constants = {
+    'false': false,
+    'true': true,
+  };
+  return (atom in constants) ? constants[atom] : Symbol.for(atom);
+}
+
+function readException(mod, adapter) {
+  const mem = new DataView(mod.instance.exports.memory.buffer);
+  const ptr = mod.instance.exports['__exception'].value;
+  const value = readLe32(mem, ptr);
+  // const reason = readLe32(mem, ptr + 4);
+  const prev_ptr = readLe32(mem, ptr + 8);
+  mod.instance.exports['__exception'].value = prev_ptr || ptr;
+  mem.setUint32(ptr, 0);
+  mem.setUint32(ptr + 4, 0);
+  mem.setUint32(ptr + 8, 0);
+  return [adapter.decode(mod, value)];// adapter.decode(mod, reason)];
+}
+
+function printTrace(mod) {
+  const func = mod.instance.exports['minibeam#print_trace_0'];
+  func();
 }
 
 const encodeAdapter = {
@@ -111,6 +132,11 @@ const encodeAdapter = {
     return x;
   },
   decode(mod, x) {
+    if (x === -256) {
+      const [exType, exReason] = readException(mod, this);
+      printTrace(mod);
+      throw new Error(exType.toString());
+    }
     if ((x & 0xF) === 0xF) {
       return (x >>> 4);
     }
@@ -138,7 +164,8 @@ function makeProxy(mod, modName, raw=false) {
           throw new TypeError(`Function not found. Was looking for ${modName}:${prop}/${arity}.`);
         }
         const erArgs = [...args].map((arg) => adapter.encode(mod, arg));
-        return adapter.decode(mod, func(...erArgs));
+        const ret = func(...erArgs);
+        return adapter.decode(mod, ret);
       }
     }
   });
