@@ -2,16 +2,25 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { erwImport, erwCompile } from './loader';
 
 erwCompile('esrc/conf_service');
+// erwCompile('esrc/conf2_service');
+erwCompile('esrc/conf3_service');
 
-const { request } = await erwImport('conf_service');
 const decoderUtf8 = new TextDecoder();
 
-function query(objectIn) {
-  const output = request(JSON.stringify(objectIn));
-  return JSON.parse(decoderUtf8.decode(output));
-}
+const versions = [
+  ['1', await erwImport('conf_service')],
+//  ['2', await erwImport('conf2_service')],
+  ['3', await erwImport('conf3_service')],
+];
 
-describe('Conf service', () => {
+describe.each(versions)('Conf service v%s', (_v, mod) => {
+  const { request } = mod;
+
+  function query(objectIn) {
+    const output = request(JSON.stringify(objectIn));
+    return JSON.parse(decoderUtf8.decode(output));
+  }
+
   it('all deselected', async () => {
     expect(query(['details', [], []]))
       .toEqual({

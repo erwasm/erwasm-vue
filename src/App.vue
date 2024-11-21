@@ -26,7 +26,7 @@
 import { reactive, onMounted } from 'vue';
 import useWorker from './useWorker';
 
-const worker = useWorker();
+const worker = useWorker('price_service');
 
 const quote = reactive({
   price: null,

@@ -19,7 +19,7 @@ JSONE=vendor/jsone_decode.wat vendor/jsone_encode.wat
 %.wasm: %.wat
 	wat2wasm $< -o $@
 
-%service.fat.wat: %service.wat $(JSONE)
+%service.fat.wat: %service.wat $(JSONE) $(DEPS)
 	python watcat/watmerge.py $@ $< $(DEPS) $(JSONE)
 
 %.fat.wat: %.wat
