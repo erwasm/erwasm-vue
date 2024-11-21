@@ -21,6 +21,8 @@
     </pre>
   </div>
 
+
+  What is this? https://github.com/erwasm/erwasm-vue
 </template>
 <script setup>
 import { reactive, onMounted } from 'vue';
