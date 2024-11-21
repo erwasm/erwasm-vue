@@ -19,7 +19,7 @@ is_c_enabled(Param1, Param2) ->
   is_y_enabled(Param1) andalso contains(<<"extra_c">>, Param2).
 
 is_d_enabled(Param1, Param2) ->
-   not is_x_enabled(Param1) andalso is_c_enabled(Param1, Param2) andalso contains(<<"extra_d">>, Param2).
+  not is_x_enabled(Param1) andalso is_c_enabled(Param1, Param2) andalso contains(<<"extra_d">>, Param2).
 
 handle([<<"details">>, Param1, Param2]) ->
   {[
