@@ -6,7 +6,8 @@ let ready = new Promise((resolve) => {
 
 async function init(modName) {
   const { fromResponse, decoderUtf8 } = await import('./proxy.js');
-  const priceService = await fromResponse(modName, fetch(`../esrc/${modName}.fat.wasm`));
+  const url = new URL(`../esrc/${modName}.fat.wasm`, import.meta.url);
+  const priceService = await fromResponse(modName, fetch(url));
   dispatchFn = (payload) => {
     const resBytes = priceService.request(JSON.stringify(payload));
     return JSON.parse(decoderUtf8.decode(resBytes));
