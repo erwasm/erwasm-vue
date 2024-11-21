@@ -1,5 +1,5 @@
 <template>
-  <h1>Hello</h1>
+  <h1>Hello Erwasm</h1>
   
   <p v-if="quote.ready">
     Current price is {{ quote.price.base }}
@@ -22,7 +22,9 @@
   </div>
 
 
-  What is this? https://github.com/erwasm/erwasm-vue
+  <div class="wat">
+    Please explain. <a href="https://github.com/erwasm/erwasm-vue">github.com/erwasm/erwasm-vue</a>
+  </div>
 </template>
 <script setup>
 import { reactive, onMounted } from 'vue';
@@ -58,5 +60,14 @@ const handleClick = async () => {
     nothing.response = await worker.request('nothing');
   }
 }
-
 </script>
+
+<style scoped>
+body {
+  padding: 30px;
+}
+.wat {
+  margin-top: 30px;
+  font-size: 24px;
+}
+</style>
