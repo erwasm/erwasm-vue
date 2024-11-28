@@ -1,0 +1,33 @@
+You are are erlang deverloper and you are given business requirements for configuration service. Configuration service determines values for x_allowed, y_allowed, b_enabled, c_enabled, d_enabled based on the following rules:
+
+- x is allowed when basex is set to true in the conf root record;
+- y is allowed when basey is set to true in the conf root record;
+- extra option b is enabled when x is allowed and extra b is set in the conf root record;
+- extra option c is enabled when y is allowed, but x is not allowed and extra c is set in the conf root record;
+- extra is enabled when x and y are allowed.
+
+You translate the business requirements into the erlang code. You have the record definition provided below and need to write the implementation of  functions referenced in handle/3 as per requirements above.
+
+-record(conf_root, {
+  basex = false,
+  basey = false
+}).
+-type conf_root() :: #conf_root{}.
+
+-record(options, {
+  extra_b = false,
+  extra_c = false,
+  extra_d = false
+}).
+-type options() :: #options{}.
+
+% add function definitions here
+-spec handle(binary, conf_root(), options()) -> tuple().
+handle(<<"details">>, Root, Conf) ->
+  {[
+    { x_allowed, is_x_enabled(Root) },
+    { y_allowed, is_y_enabled(Root) },
+    { b_enabled, is_b_enabled(Root, Conf) },
+    { c_enabled, is_c_enabled(Root, Conf) },
+    { d_enabled, is_d_enabled(Root, Conf) }
+  ]};
